@@ -22,10 +22,11 @@ export async function saveFile(file: UploadFile) {
     );
     return;
   }
-
+  const assetPrefix = await system.getSpaceConfig("assetPrefix", "");
+  const filenameCandidate = assetPrefix + file.name;
   const finalFileName = await editor.prompt(
     "File name for pasted document",
-    file.name,
+    filenameCandidate,
   );
   if (!finalFileName) {
     return;
