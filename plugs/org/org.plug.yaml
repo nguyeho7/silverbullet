@@ -1,0 +1,113 @@
+name: org
+functions:
+  # TODO State Commands
+  cycleTodoForward:
+    path: org.ts:cycleTodoForward
+    command:
+      name: "Org: Cycle TODO Forward"
+      key: "Ctrl-Shift-Enter"
+      mac: "Cmd-Shift-Enter"
+      requireEditor: page
+
+  cycleTodoBackward:
+    path: org.ts:cycleTodoBackward
+    command:
+      name: "Org: Cycle TODO Backward"
+      key: "Ctrl-Shift-Backspace"
+      mac: "Cmd-Shift-Backspace"
+      requireEditor: page
+
+  markTodo:
+    path: org.ts:markTodo
+    command:
+      name: "Org: Mark as TODO"
+      requireEditor: page
+
+  markDone:
+    path: org.ts:markDone
+    command:
+      name: "Org: Mark as DONE"
+      key: "Ctrl-Shift-d"
+      mac: "Cmd-Shift-d"
+      requireEditor: page
+
+  clearTodoState:
+    path: org.ts:clearTodoState
+    command:
+      name: "Org: Clear TODO State"
+      requireEditor: page
+
+  # Headline Structure Commands
+  promoteHeadline:
+    path: org.ts:promoteHeadline
+    command:
+      name: "Org: Promote Headline"
+      key: "Alt-Left"
+      mac: "Alt-Left"
+      requireEditor: page
+
+  demoteHeadline:
+    path: org.ts:demoteHeadline
+    command:
+      name: "Org: Demote Headline"
+      key: "Alt-Right"
+      mac: "Alt-Right"
+      requireEditor: page
+
+  insertHeadline:
+    path: org.ts:insertHeadline
+    command:
+      name: "Org: Insert Headline"
+      key: "Ctrl-Enter"
+      mac: "Cmd-Enter"
+      requireEditor: page
+
+  insertSubheadline:
+    path: org.ts:insertSubheadline
+    command:
+      name: "Org: Insert Subheadline"
+      key: "Ctrl-Shift-Enter"
+      mac: "Cmd-Shift-Enter"
+      requireEditor: page
+
+  # Tag Commands
+  toggleTag:
+    path: org.ts:toggleTag
+    command:
+      name: "Org: Toggle Tag"
+      key: "Ctrl-Shift-t"
+      mac: "Cmd-Shift-t"
+      requireEditor: page
+
+  # Property Commands
+  setProperty:
+    path: org.ts:setProperty
+    command:
+      name: "Org: Set Property"
+      requireEditor: page
+
+  # Timestamp Commands
+  insertActiveTimestamp:
+    path: org.ts:insertActiveTimestamp
+    command:
+      name: "Org: Insert Active Timestamp"
+      key: "Ctrl-."
+      mac: "Cmd-."
+      requireEditor: page
+
+  insertInactiveTimestamp:
+    path: org.ts:insertInactiveTimestamp
+    command:
+      name: "Org: Insert Inactive Timestamp"
+      key: "Ctrl-Shift-."
+      mac: "Cmd-Shift-."
+      requireEditor: page
+
+  # Clocking Commands
+  clockIn:
+    path: org.ts:clockIn
+    command:
+      name: "Org: Clock In"
+      key: "Ctrl-Shift-i"
+      mac: "Cmd-Shift-i"
+      requireEditor: page

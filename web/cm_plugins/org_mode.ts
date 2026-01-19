@@ -28,6 +28,7 @@ import {
   type HeadlineNode,
   OrgEngine,
 } from "$common/org_parser/engine.ts";
+import { parseInlineCached, type InlineElement } from "$common/org_parser/inline.ts";
 import { foldService, codeFolding } from "@codemirror/language";
 
 // Facet to provide the OrgEngine to other extensions
@@ -90,6 +91,16 @@ const markDecorations = {
   propertyValue: Decoration.mark({ class: "sb-org-property-value" }),
   drawerDelimiter: Decoration.mark({ class: "sb-org-drawer-delimiter" }),
   timestamp: Decoration.mark({ class: "sb-org-timestamp" }),
+  // Inline markup
+  bold: Decoration.mark({ class: "sb-org-bold" }),
+  italic: Decoration.mark({ class: "sb-org-italic" }),
+  underline: Decoration.mark({ class: "sb-org-underline" }),
+  strikethrough: Decoration.mark({ class: "sb-org-strikethrough" }),
+  code: Decoration.mark({ class: "sb-org-code" }),
+  verbatim: Decoration.mark({ class: "sb-org-verbatim" }),
+  link: Decoration.mark({ class: "sb-org-link" }),
+  "timestamp-active": Decoration.mark({ class: "sb-org-timestamp-active" }),
+  "timestamp-inactive": Decoration.mark({ class: "sb-org-timestamp-inactive" }),
 };
 
 // Fold marker widget
@@ -195,13 +206,33 @@ function computeDecorations(state: EditorState): DecorationSet {
         }
         break;
 
-      case "text":
+      case "text": {
         builder.add(lineStart, lineStart, lineDecorations.text);
+        // Parse inline markup for text lines
+        const textLine = line as import("$common/org_parser/engine.ts").TextLine;
+        addInlineDecorations(builder, docLine.text, lineStart);
         break;
+      }
     }
   }
 
   return builder.finish();
+}
+
+// Helper to add inline markup decorations
+function addInlineDecorations(
+  builder: RangeSetBuilder<Decoration>,
+  text: string,
+  lineStart: number
+) {
+  const inlineElements = parseInlineCached(text);
+
+  for (const elem of inlineElements) {
+    const decoration = markDecorations[elem.type as keyof typeof markDecorations];
+    if (decoration && typeof decoration !== "function") {
+      builder.add(lineStart + elem.from, lineStart + elem.to, decoration);
+    }
+  }
 }
 
 // State field for decorations
@@ -356,6 +387,49 @@ export const orgModeTheme = EditorView.baseTheme({
     padding: "0 4px",
     borderRadius: "3px",
     fontSize: "0.8em",
+  },
+
+  // Inline markup
+  ".sb-org-bold": {
+    fontWeight: "bold",
+  },
+  ".sb-org-italic": {
+    fontStyle: "italic",
+  },
+  ".sb-org-underline": {
+    textDecoration: "underline",
+  },
+  ".sb-org-strikethrough": {
+    textDecoration: "line-through",
+    opacity: "0.7",
+  },
+  ".sb-org-code": {
+    fontFamily: "monospace",
+    backgroundColor: "var(--org-code-bg, rgba(0, 0, 0, 0.05))",
+    padding: "1px 4px",
+    borderRadius: "3px",
+    color: "var(--org-code-color, #c7254e)",
+  },
+  ".sb-org-verbatim": {
+    fontFamily: "monospace",
+    color: "var(--org-verbatim-color, #666)",
+  },
+  ".sb-org-link": {
+    color: "var(--org-link-color, #3498db)",
+    textDecoration: "underline",
+    cursor: "pointer",
+  },
+  ".sb-org-timestamp-active": {
+    color: "var(--org-timestamp-active-color, #8e44ad)",
+    backgroundColor: "var(--org-timestamp-active-bg, rgba(142, 68, 173, 0.1))",
+    padding: "1px 4px",
+    borderRadius: "3px",
+  },
+  ".sb-org-timestamp-inactive": {
+    color: "var(--org-timestamp-inactive-color, #7f8c8d)",
+    backgroundColor: "var(--org-timestamp-inactive-bg, rgba(127, 140, 141, 0.1))",
+    padding: "1px 4px",
+    borderRadius: "3px",
   },
 });
 
