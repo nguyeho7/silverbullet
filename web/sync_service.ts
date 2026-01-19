@@ -8,7 +8,7 @@ import {
 import { sleep } from "$lib/async.ts";
 import type { EventHook } from "../common/hooks/event.ts";
 import type { DataStore } from "$lib/data/datastore.ts";
-import type { Space } from "../common/space.ts";
+import { PAGE_EXTENSION, type Space } from "../common/space.ts";
 
 // Keeps the current sync snapshot
 const syncSnapshotKey = ["sync", "snapshot"];
@@ -76,7 +76,7 @@ export class SyncService implements ISyncService {
       "editor:pageLoaded",
       (name, _prevPage, isSynced) => {
         if (!isSynced) {
-          this.scheduleFileSync(`${name}.md`).catch(console.error);
+          this.scheduleFileSync(`${name}${PAGE_EXTENSION}`).catch(console.error);
         }
       },
     );
@@ -102,7 +102,7 @@ export class SyncService implements ISyncService {
       } else {
         console.warn("This should not happen, savingTimeout was not set");
       }
-      const path = `${name}.md`;
+      const path = `${name}${PAGE_EXTENSION}`;
       this.scheduleFileSync(path).catch(console.error);
     });
 

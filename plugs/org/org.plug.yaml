@@ -1,0 +1,275 @@
+name: org
+functions:
+  # TODO State Commands
+  cycleTodoForward:
+    path: org.ts:cycleTodoForward
+    command:
+      name: "Org: Cycle TODO Forward"
+      key: "Ctrl-Shift-Enter"
+      mac: "Cmd-Shift-Enter"
+      requireEditor: page
+
+  cycleTodoBackward:
+    path: org.ts:cycleTodoBackward
+    command:
+      name: "Org: Cycle TODO Backward"
+      key: "Ctrl-Shift-Backspace"
+      mac: "Cmd-Shift-Backspace"
+      requireEditor: page
+
+  markTodo:
+    path: org.ts:markTodo
+    command:
+      name: "Org: Mark as TODO"
+      requireEditor: page
+
+  markDone:
+    path: org.ts:markDone
+    command:
+      name: "Org: Mark as DONE"
+      key: "Ctrl-Shift-d"
+      mac: "Cmd-Shift-d"
+      requireEditor: page
+
+  clearTodoState:
+    path: org.ts:clearTodoState
+    command:
+      name: "Org: Clear TODO State"
+      requireEditor: page
+
+  # Headline Structure Commands
+  promoteHeadline:
+    path: org.ts:promoteHeadline
+    command:
+      name: "Org: Promote Headline"
+      key: "Alt-Left"
+      mac: "Alt-Left"
+      requireEditor: page
+
+  demoteHeadline:
+    path: org.ts:demoteHeadline
+    command:
+      name: "Org: Demote Headline"
+      key: "Alt-Right"
+      mac: "Alt-Right"
+      requireEditor: page
+
+  insertHeadline:
+    path: org.ts:insertHeadline
+    command:
+      name: "Org: Insert Headline"
+      key: "Ctrl-Enter"
+      mac: "Cmd-Enter"
+      requireEditor: page
+
+  insertSubheadline:
+    path: org.ts:insertSubheadline
+    command:
+      name: "Org: Insert Subheadline"
+      requireEditor: page
+
+  # Tag Commands
+  toggleTag:
+    path: org.ts:toggleTag
+    command:
+      name: "Org: Toggle Tag"
+      key: "Ctrl-Shift-t"
+      mac: "Cmd-Shift-t"
+      requireEditor: page
+
+  # Property Commands
+  setProperty:
+    path: org.ts:setProperty
+    command:
+      name: "Org: Set Property"
+      requireEditor: page
+
+  # Timestamp Commands
+  insertActiveTimestamp:
+    path: org.ts:insertActiveTimestamp
+    command:
+      name: "Org: Insert Active Timestamp"
+      key: "Ctrl-."
+      mac: "Cmd-."
+      requireEditor: page
+
+  insertInactiveTimestamp:
+    path: org.ts:insertInactiveTimestamp
+    command:
+      name: "Org: Insert Inactive Timestamp"
+      key: "Ctrl-Shift-."
+      mac: "Cmd-Shift-."
+      requireEditor: page
+
+  insertTimestampPrompt:
+    path: org.ts:insertTimestampPrompt
+    command:
+      name: "Org: Insert Timestamp (with picker)"
+      key: "Ctrl-Shift-,"
+      mac: "Cmd-Shift-,"
+      requireEditor: page
+
+  # Scheduling Commands
+  insertScheduled:
+    path: org.ts:insertScheduled
+    command:
+      name: "Org: Insert SCHEDULED"
+      key: "Ctrl-c s"
+      mac: "Ctrl-c s"
+      requireEditor: page
+
+  insertDeadline:
+    path: org.ts:insertDeadline
+    command:
+      name: "Org: Insert DEADLINE"
+      key: "Ctrl-c d"
+      mac: "Ctrl-c d"
+      requireEditor: page
+
+  # Clocking Commands
+  clockIn:
+    path: org.ts:clockIn
+    command:
+      name: "Org: Clock In"
+      key: "Ctrl-Shift-i"
+      mac: "Cmd-Shift-i"
+      requireEditor: page
+
+  # List/Checkbox Commands
+  toggleCheckbox:
+    path: org.ts:toggleCheckbox
+    command:
+      name: "Org: Toggle Checkbox"
+      key: "Ctrl-Shift-x"
+      mac: "Cmd-Shift-x"
+      requireEditor: page
+
+  insertListItem:
+    path: org.ts:insertListItem
+    command:
+      name: "Org: Insert List Item"
+      key: "Alt-Enter"
+      mac: "Alt-Enter"
+      requireEditor: page
+
+  indentListItem:
+    path: org.ts:indentListItem
+    command:
+      name: "Org: Indent List Item"
+      key: "Alt-Shift-Right"
+      mac: "Alt-Shift-Right"
+      requireEditor: page
+
+  outdentListItem:
+    path: org.ts:outdentListItem
+    command:
+      name: "Org: Outdent List Item"
+      key: "Alt-Shift-Left"
+      mac: "Alt-Shift-Left"
+      requireEditor: page
+
+  # Agenda Commands
+  showAgenda:
+    path: agenda.ts:showAgenda
+    command:
+      name: "Org: Show Agenda"
+      key: "Ctrl-c a"
+      mac: "Ctrl-c a"
+      requireEditor: page
+
+  showTodoList:
+    path: agenda.ts:showTodoList
+    command:
+      name: "Org: Show TODO List"
+      key: "Ctrl-c t"
+      mac: "Ctrl-c t"
+      requireEditor: page
+
+  # Agenda Widget
+  agendaWidget:
+    path: agenda.ts:agendaWidget
+    codeWidget: org-agenda
+    renderMode: markdown
+
+  # Autocompletion (only indexed data, no presets)
+  orgPropertyComplete:
+    path: complete.ts:orgPropertyComplete
+    events:
+      - editor:complete
+
+  orgTimestampComplete:
+    path: complete.ts:orgTimestampComplete
+    events:
+      - editor:complete
+
+  orgTagComplete:
+    path: complete.ts:orgTagComplete
+    events:
+      - editor:complete
+
+  # Slash Commands
+  orgSlashComplete:
+    path: slash.ts:orgSlashComplete
+    events:
+      - slash:complete
+
+  insertCodeBlock:
+    path: slash.ts:insertCodeBlock
+    command:
+      name: "Org: Insert Code Block"
+      requireEditor: page
+
+  insertQuoteBlock:
+    path: slash.ts:insertQuoteBlock
+    command:
+      name: "Org: Insert Quote Block"
+      requireEditor: page
+
+  insertExampleBlock:
+    path: slash.ts:insertExampleBlock
+    command:
+      name: "Org: Insert Example Block"
+      requireEditor: page
+
+  insertTodoHeadline:
+    path: slash.ts:insertTodoHeadline
+    command:
+      name: "Org: Insert TODO Headline"
+      requireEditor: page
+
+  insertCheckboxItem:
+    path: slash.ts:insertCheckboxItem
+    command:
+      name: "Org: Insert Checkbox Item"
+      requireEditor: page
+
+  insertPropertyDrawer:
+    path: slash.ts:insertPropertyDrawer
+    command:
+      name: "Org: Insert Property Drawer"
+      requireEditor: page
+
+  # Virtual Tag Pages (🏷 tagname)
+  readFileOrgTag:
+    path: tag_page.ts:readFileOrgTag
+    pageNamespace:
+      pattern: "^🏷 .+"
+      operation: readFile
+
+  writeFileOrgTag:
+    path: tag_page.ts:writeFileOrgTag
+    pageNamespace:
+      pattern: "^🏷 .+"
+      operation: writeFile
+
+  getFileMetaOrgTag:
+    path: tag_page.ts:getFileMetaOrgTag
+    pageNamespace:
+      pattern: "^🏷 .+"
+      operation: getFileMeta
+
+  # Click handler for tags
+  handleOrgClick:
+    path: click.ts:handleOrgClick
+    events:
+      - page:click

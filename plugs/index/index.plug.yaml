@@ -122,7 +122,7 @@ functions:
     events:
       - page:index
 
-  # Headers
+  # Headers (Markdown)
   indexHeaders:
     path: header.ts:indexHeaders
     events:
@@ -131,6 +131,22 @@ functions:
     path: header.ts:headerComplete
     events:
       - editor:complete
+
+  # Org-mode Headlines
+  indexOrgHeadlines:
+    path: org_headline.ts:indexOrgHeadlines
+    events:
+      - page:index
+  orgHeadlineComplete:
+    path: org_headline.ts:orgHeadlineComplete
+    events:
+      - editor:complete
+
+  # Org-mode Transclusion
+  transcludeWidget:
+    path: org_transclude.ts:transcludeWidget
+    codeWidget: transclude
+    renderMode: markdown
 
   # Data
   indexData:
@@ -562,6 +578,76 @@ config:
           type: number
         level:
           type: string
+    org-headline:
+      type: object
+      additionalProperties: true
+      properties:
+        ref:
+          type: string
+          readOnly: true
+        tag:
+          type: string
+          readOnly: true
+        tags:
+          type: array
+          items:
+            type: string
+          nullable: true
+        itags:
+          type: array
+          readOnly: true
+          items:
+            type: string
+          nullable: true
+        name:
+          type: string
+          readOnly: true
+        page:
+          type: string
+          readOnly: true
+        path:
+          type: string
+          readOnly: true
+        level:
+          type: number
+          readOnly: true
+        pos:
+          type: number
+          readOnly: true
+        endPos:
+          type: number
+          readOnly: true
+        todoState:
+          type: string
+          nullable: true
+          enum:
+            - TODO
+            - DONE
+            - NEXT
+            - WAITING
+            - CANCELLED
+        priority:
+          type: string
+          nullable: true
+        scheduled:
+          type: string
+          nullable: true
+        deadline:
+          type: string
+          nullable: true
+        hasContent:
+          type: boolean
+          readOnly: true
+        hasChildren:
+          type: boolean
+          readOnly: true
+        childCount:
+          type: number
+          readOnly: true
+        totalClocked:
+          type: number
+          nullable: true
+          readOnly: true
     paragraph:
       type: object
       properties:

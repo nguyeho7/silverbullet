@@ -7,7 +7,7 @@ import { EditorView } from "@codemirror/view";
 import { indentUnit, syntaxTree } from "@codemirror/language";
 import { history, isolateHistory } from "@codemirror/commands";
 import type { SyntaxNode } from "@lezer/common";
-import { Space } from "../common/space.ts";
+import { PAGE_EXTENSION, Space } from "../common/space.ts";
 import type { FilterOption } from "@silverbulletmd/silverbullet/type/client";
 import { EventHook } from "../common/hooks/event.ts";
 import { type AppCommand, isValidEditor } from "$lib/command.ts";
@@ -686,10 +686,10 @@ export class Client implements ConfigContainer {
   currentPath(extension: boolean = false): string {
     if (this.ui.viewState.current !== undefined) {
       return this.ui.viewState.current.path +
-        ((this.ui.viewState.current.kind === "page" && extension) ? ".md" : "");
+        ((this.ui.viewState.current.kind === "page" && extension) ? PAGE_EXTENSION : "");
     } else {
       return this.onLoadRef.page +
-        ((this.onLoadRef.kind === "page" && extension) ? ".md" : "");
+        ((this.onLoadRef.kind === "page" && extension) ? PAGE_EXTENSION : "");
     }
   }
 
@@ -1306,7 +1306,7 @@ export class Client implements ConfigContainer {
     if (previousPath) {
       // this.openPages.saveState(previousPage);
       this.space.unwatchFile(previousPath);
-      if (previousPath !== `${pageName}.md`) {
+      if (previousPath !== `${pageName}${PAGE_EXTENSION}`) {
         await this.save(true);
       }
     }
@@ -1410,7 +1410,7 @@ export class Client implements ConfigContainer {
       if (editorView.contentDOM) {
         this.tweakEditorDOM(editorView.contentDOM);
       }
-      this.space.watchFile(`${pageName}.md`);
+      this.space.watchFile(`${pageName}${PAGE_EXTENSION}`);
     } else {
       // Just apply minimal patches so that the cursor is preserved
       this.setEditorText(doc.text, true);
@@ -1421,7 +1421,7 @@ export class Client implements ConfigContainer {
       this.eventHook.dispatchEvent(
         "editor:pageLoaded",
         pageName,
-        previousPath.slice(0, -3),
+        previousPath.slice(0, -PAGE_EXTENSION.length),
       )
         .catch(
           console.error,

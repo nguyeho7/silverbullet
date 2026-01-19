@@ -8,6 +8,9 @@ import { localDateString } from "$lib/dates.ts";
 
 const pageWatchInterval = 5000;
 
+// Default page extension - org-mode
+export const PAGE_EXTENSION = ".org";
+
 export class Space {
   // We do watch files in the background to detect changes
   // This set of pages should only ever contain 1 page
@@ -40,12 +43,12 @@ export class Space {
 
   async deletePage(name: string): Promise<void> {
     await this.getPageMeta(name); // Check if page exists, if not throws Error
-    await this.spacePrimitives.deleteFile(`${name}.md`);
+    await this.spacePrimitives.deleteFile(`${name}${PAGE_EXTENSION}`);
   }
 
   async getPageMeta(name: string): Promise<PageMeta> {
     return fileMetaToPageMeta(
-      await this.spacePrimitives.getFileMeta(`${name}.md`),
+      await this.spacePrimitives.getFileMeta(`${name}${PAGE_EXTENSION}`),
     );
   }
 
@@ -59,7 +62,7 @@ export class Space {
   }
 
   async readPage(name: string): Promise<{ text: string; meta: PageMeta }> {
-    const pageData = await this.spacePrimitives.readFile(`${name}.md`);
+    const pageData = await this.spacePrimitives.readFile(`${name}${PAGE_EXTENSION}`);
     return {
       text: new TextDecoder().decode(pageData.data),
       meta: fileMetaToPageMeta(pageData.meta),
@@ -75,7 +78,7 @@ export class Space {
       this.saving = true;
       const pageMeta = fileMetaToPageMeta(
         await this.spacePrimitives.writeFile(
-          `${name}.md`,
+          `${name}${PAGE_EXTENSION}`,
           new TextEncoder().encode(text),
           selfUpdate,
         ),
@@ -89,7 +92,7 @@ export class Space {
 
   // We're listing all pages that don't start with a _
   isListedPage(fileMeta: FileMeta): boolean {
-    return fileMeta.name.endsWith(".md") && !fileMeta.name.startsWith("_");
+    return fileMeta.name.endsWith(PAGE_EXTENSION) && !fileMeta.name.startsWith("_");
   }
 
   async fetchPageList(): Promise<PageMeta[]> {
@@ -189,7 +192,8 @@ export class Space {
 }
 
 export function fileMetaToPageMeta(fileMeta: FileMeta): PageMeta {
-  const name = fileMeta.name.substring(0, fileMeta.name.length - 3);
+  // Strip the page extension (.org) to get the page name
+  const name = fileMeta.name.substring(0, fileMeta.name.length - PAGE_EXTENSION.length);
   try {
     return {
       ...fileMeta,
