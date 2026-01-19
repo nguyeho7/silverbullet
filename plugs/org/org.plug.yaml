@@ -103,6 +103,31 @@ functions:
       mac: "Cmd-Shift-."
       requireEditor: page
 
+  insertTimestampPrompt:
+    path: org.ts:insertTimestampPrompt
+    command:
+      name: "Org: Insert Timestamp (with picker)"
+      key: "Ctrl-Shift-,"
+      mac: "Cmd-Shift-,"
+      requireEditor: page
+
+  # Scheduling Commands
+  insertScheduled:
+    path: org.ts:insertScheduled
+    command:
+      name: "Org: Insert SCHEDULED"
+      key: "Ctrl-c s"
+      mac: "Ctrl-c s"
+      requireEditor: page
+
+  insertDeadline:
+    path: org.ts:insertDeadline
+    command:
+      name: "Org: Insert DEADLINE"
+      key: "Ctrl-c d"
+      mac: "Ctrl-c d"
+      requireEditor: page
+
   # Clocking Commands
   clockIn:
     path: org.ts:clockIn
@@ -167,3 +192,24 @@ functions:
     path: agenda.ts:agendaWidget
     codeWidget: org-agenda
     renderMode: markdown
+
+  # Autocompletion
+  orgPropertyComplete:
+    path: complete.ts:orgPropertyComplete
+    events:
+      - editor:complete
+
+  orgPlanningComplete:
+    path: complete.ts:orgPlanningComplete
+    events:
+      - editor:complete
+
+  orgTimestampComplete:
+    path: complete.ts:orgTimestampComplete
+    events:
+      - editor:complete
+
+  orgTagComplete:
+    path: complete.ts:orgTagComplete
+    events:
+      - editor:complete

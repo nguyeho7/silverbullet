@@ -419,6 +419,131 @@ export async function insertInactiveTimestamp() {
 }
 
 /**
+ * Insert SCHEDULED line with timestamp
+ * If on a headline, inserts on next line
+ */
+export async function insertScheduled() {
+  await insertPlanningLine("SCHEDULED");
+}
+
+/**
+ * Insert DEADLINE line with timestamp
+ * If on a headline, inserts on next line
+ */
+export async function insertDeadline() {
+  await insertPlanningLine("DEADLINE");
+}
+
+/**
+ * Insert a planning line (SCHEDULED, DEADLINE, or CLOSED)
+ */
+async function insertPlanningLine(keyword: "SCHEDULED" | "DEADLINE" | "CLOSED") {
+  const now = new Date();
+  const timestamp = `<${formatOrgDate(now)}>`;
+  const planningText = `${keyword}: ${timestamp}`;
+
+  const { lineText, lineEnd, lineNumber } = await getCurrentLineInfo();
+  const parsed = parseLine(lineText, lineNumber);
+
+  const text = await editor.getText();
+
+  if (parsed.type === "headline") {
+    // Insert on next line after headline
+    const newText = text.substring(0, lineEnd) + "\n" + planningText + text.substring(lineEnd);
+    await editor.setText(newText);
+    // Position cursor after the timestamp
+    await editor.setSelection(lineEnd + 1 + planningText.length, lineEnd + 1 + planningText.length);
+  } else if (parsed.type === "planning") {
+    // Append to existing planning line
+    const newLine = lineText + " " + planningText;
+    const lineStart = lineEnd - lineText.length;
+    const newText = text.substring(0, lineStart) + newLine + text.substring(lineEnd);
+    await editor.setText(newText);
+  } else {
+    // Insert at cursor
+    await editor.insertAtCursor(planningText);
+  }
+}
+
+/**
+ * Format date as YYYY-MM-DD Day (without time)
+ */
+function formatOrgDate(date: Date): string {
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const dayStr = days[date.getDay()];
+  return `${dateStr} ${dayStr}`;
+}
+
+/**
+ * Insert timestamp with date picker prompt
+ * Supports: YYYY-MM-DD, +Nd (days), +Nw (weeks), +Nm (months)
+ */
+export async function insertTimestampPrompt() {
+  const dateStr = await editor.prompt("Date (YYYY-MM-DD, +3d, +1w, +1m):", formatOrgDate(new Date()).split(" ")[0]);
+  if (!dateStr) return;
+
+  const date = parseDateInput(dateStr);
+  if (!date) {
+    await editor.flashNotification("Invalid date format", "error");
+    return;
+  }
+
+  const formattedDate = formatOrgDate(date);
+  const timestamp = `<${formattedDate}>`;
+  await editor.insertAtCursor(timestamp);
+}
+
+/**
+ * Parse flexible date input
+ * Supports: YYYY-MM-DD, +Nd (days), +Nw (weeks), +Nm (months)
+ */
+function parseDateInput(input: string): Date | null {
+  input = input.trim();
+
+  // Absolute date: YYYY-MM-DD
+  const absoluteMatch = input.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (absoluteMatch) {
+    const year = parseInt(absoluteMatch[1]);
+    const month = parseInt(absoluteMatch[2]) - 1;
+    const day = parseInt(absoluteMatch[3]);
+    return new Date(year, month, day);
+  }
+
+  // Relative date: +Nd, +Nw, +Nm
+  const relativeMatch = input.match(/^([+-]?\d+)([dwm])$/i);
+  if (relativeMatch) {
+    const amount = parseInt(relativeMatch[1]);
+    const unit = relativeMatch[2].toLowerCase();
+    const date = new Date();
+
+    switch (unit) {
+      case "d":
+        date.setDate(date.getDate() + amount);
+        break;
+      case "w":
+        date.setDate(date.getDate() + amount * 7);
+        break;
+      case "m":
+        date.setMonth(date.getMonth() + amount);
+        break;
+    }
+    return date;
+  }
+
+  // Try to parse as a simple number (days from now)
+  const daysMatch = input.match(/^([+-]?\d+)$/);
+  if (daysMatch) {
+    const days = parseInt(daysMatch[1]);
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date;
+  }
+
+  return null;
+}
+
+/**
  * Clock in to current headline
  */
 export async function clockIn() {
