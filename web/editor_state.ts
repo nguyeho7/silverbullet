@@ -1,4 +1,4 @@
-import customMarkdownStyle from "./style.ts";
+import { orgModePlugin } from "./cm_plugins/org_mode.ts";
 import {
   history,
   indentWithTab,
@@ -14,12 +14,8 @@ import {
   completionKeymap,
 } from "@codemirror/autocomplete";
 import {
-  codeFolding,
   indentOnInput,
   indentUnit,
-  LanguageDescription,
-  LanguageSupport,
-  syntaxHighlighting,
 } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import {
@@ -33,11 +29,10 @@ import {
   type ViewUpdate,
 } from "@codemirror/view";
 import { vim } from "@replit/codemirror-vim";
-import { markdown } from "@codemirror/lang-markdown";
 import type { Client } from "./client.ts";
 import { inlineContentPlugin } from "./cm_plugins/inline_content.ts";
-import { cleanModePlugins } from "./cm_plugins/clean.ts";
-import { lineWrapper } from "./cm_plugins/line_wrapper.ts";
+// TODO: Re-enable once we have org-mode specific plugins
+// import { cleanModePlugins } from "./cm_plugins/clean.ts";
 import { createSmartQuoteKeyBindings } from "./cm_plugins/smart_quotes.ts";
 import type { ClickEvent } from "../plug-api/types.ts";
 import {
@@ -46,10 +41,8 @@ import {
 } from "./cm_plugins/editor_paste.ts";
 import type { TextChange } from "./change.ts";
 import { postScriptPrefacePlugin } from "./cm_plugins/top_bottom_panels.ts";
-import { languageFor } from "$common/languages.ts";
 import { plugLinter } from "./cm_plugins/lint.ts";
 import { Compartment, type Extension } from "@codemirror/state";
-import { extendedMarkdownLanguage } from "$common/markdown_parser/parser.ts";
 import { parseCommand } from "$common/command.ts";
 import { safeRun } from "$lib/async.ts";
 import { codeCopyPlugin } from "./cm_plugins/code_copy.ts";
@@ -101,28 +94,8 @@ export function createEditorState(
           : [],
       ],
 
-      // The uber markdown mode
-      markdown({
-        base: extendedMarkdownLanguage,
-        codeLanguages: (info) => {
-          const lang = languageFor(info);
-          if (lang) {
-            return LanguageDescription.of({
-              name: info,
-              support: new LanguageSupport(lang),
-            });
-          }
-
-          return null;
-        },
-        addKeymap: true,
-      }),
-      extendedMarkdownLanguage.data.of({
-        closeBrackets: {
-          brackets: client.config?.autoCloseBrackets.split(""),
-        },
-      }),
-      syntaxHighlighting(customMarkdownStyle()),
+      // Org-mode support
+      orgModePlugin(),
       autocompletion({
         override: [
           client.editorComplete.bind(client),
@@ -143,38 +116,17 @@ export function createEditorState(
       highlightSpecialChars(),
       undoHistory,
       dropCursor(),
-      codeFolding({
-        placeholderText: "…",
-      }),
+      // Folding is provided by orgModePlugin
       indentUnits,
       indentOnInput(),
-      ...cleanModePlugins(client),
+      // TODO: Create org-mode specific clean plugins
+      // ...cleanModePlugins(client),
       EditorView.lineWrapping,
       plugLinter(client),
       drawSelection(),
       postScriptPrefacePlugin(client),
-      lineWrapper([
-        { selector: "ATXHeading1", class: "sb-line-h1" },
-        { selector: "ATXHeading2", class: "sb-line-h2" },
-        { selector: "ATXHeading3", class: "sb-line-h3" },
-        { selector: "ATXHeading4", class: "sb-line-h4" },
-        { selector: "ATXHeading5", class: "sb-line-h5" },
-        { selector: "ATXHeading6", class: "sb-line-h6" },
-        { selector: "ListItem", class: "sb-line-li", nesting: true },
-        { selector: "Blockquote", class: "sb-line-blockquote" },
-        { selector: "Task", class: "sb-line-task" },
-        { selector: "CodeBlock", class: "sb-line-code" },
-        { selector: "FencedCode", class: "sb-line-fenced-code" },
-        { selector: "Comment", class: "sb-line-comment" },
-        { selector: "BulletList", class: "sb-line-ul" },
-        { selector: "OrderedList", class: "sb-line-ol" },
-        { selector: "TableHeader", class: "sb-line-tbl-header" },
-        {
-          selector: "FrontMatter",
-          class: "sb-frontmatter",
-        },
-      ]),
-      disableSpellcheck(["InlineCode", "CodeText", "CodeInfo", "FrontMatter"]),
+      // Org-mode provides its own line decorations via orgModePlugin
+      disableSpellcheck([]),
       keyBindings,
       EditorView.domEventHandlers({
         // This may result in duplicated touch events on mobile devices

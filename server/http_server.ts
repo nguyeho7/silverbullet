@@ -15,6 +15,7 @@ import { PrefixedKvPrimitives } from "$lib/data/prefixed_kv_primitives.ts";
 import { extendedMarkdownLanguage } from "$common/markdown_parser/parser.ts";
 import { parse } from "$common/markdown_parser/parse_tree.ts";
 import { renderMarkdownToHtml } from "../plugs/markdown/markdown_render.ts";
+import { PAGE_EXTENSION } from "$common/space.ts";
 import {
   decodePageURI,
   looksLikePathWithExtension,
@@ -83,7 +84,7 @@ export class HttpServer {
       if (!looksLikePathWithExtension(pageName)) {
         try {
           const { data, meta } = await spaceServer.spacePrimitives.readFile(
-            `${pageName}.md`,
+            `${pageName}${PAGE_EXTENSION}`,
           );
           lastModified = utcDateString(meta.lastModified);
 
@@ -413,7 +414,7 @@ export class HttpServer {
       const host = url.host;
       const redirectToAuth = () => {
         // Try filtering api paths
-        if (req.path.startsWith("/.") || req.path.endsWith(".md")) {
+        if (req.path.startsWith("/.") || req.path.endsWith(PAGE_EXTENSION)) {
           return c.redirect("/.auth", 401 as any);
         } else {
           return c.redirect(`/.auth?from=${req.path}`, 401 as any);
@@ -572,7 +573,6 @@ export class HttpServer {
     });
 
     const filePathRegex = "/:path{[^!].*\\.[a-zA-Z0-9]+}";
-    const mdExt = ".md";
 
     this.app.get(filePathRegex, async (c, next) => {
       const req = c.req;
@@ -580,7 +580,7 @@ export class HttpServer {
       console.log("Requested file", name);
 
       if (
-        name.endsWith(mdExt) &&
+        name.endsWith(PAGE_EXTENSION) &&
         // This header signififies the requests comes directly from the http_space_primitives client (not the browser)
         !req.header("X-Sync-Mode") &&
         // This Accept header is used by federation to still work with CORS
