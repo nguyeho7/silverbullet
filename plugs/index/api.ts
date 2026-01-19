@@ -50,8 +50,11 @@ export function batchSet(page: string, kvs: KV[]): Promise<void> {
  * @param file
  */
 export async function clearFileIndex(file: string): Promise<void> {
+  // Handle both .md and .org extensions
   if (file.endsWith(".md")) {
     file = file.replace(/\.md$/, "");
+  } else if (file.endsWith(".org")) {
+    file = file.replace(/\.org$/, "");
   }
   const allKeys: KvKey[] = [];
   for (
