@@ -66,8 +66,6 @@ functions:
     path: org.ts:insertSubheadline
     command:
       name: "Org: Insert Subheadline"
-      key: "Ctrl-Shift-Enter"
-      mac: "Cmd-Shift-Enter"
       requireEditor: page
 
   # Tag Commands
@@ -193,14 +191,9 @@ functions:
     codeWidget: org-agenda
     renderMode: markdown
 
-  # Autocompletion
+  # Autocompletion (only indexed data, no presets)
   orgPropertyComplete:
     path: complete.ts:orgPropertyComplete
-    events:
-      - editor:complete
-
-  orgPlanningComplete:
-    path: complete.ts:orgPlanningComplete
     events:
       - editor:complete
 
@@ -213,3 +206,70 @@ functions:
     path: complete.ts:orgTagComplete
     events:
       - editor:complete
+
+  # Slash Commands
+  orgSlashComplete:
+    path: slash.ts:orgSlashComplete
+    events:
+      - slash:complete
+
+  insertCodeBlock:
+    path: slash.ts:insertCodeBlock
+    command:
+      name: "Org: Insert Code Block"
+      requireEditor: page
+
+  insertQuoteBlock:
+    path: slash.ts:insertQuoteBlock
+    command:
+      name: "Org: Insert Quote Block"
+      requireEditor: page
+
+  insertExampleBlock:
+    path: slash.ts:insertExampleBlock
+    command:
+      name: "Org: Insert Example Block"
+      requireEditor: page
+
+  insertTodoHeadline:
+    path: slash.ts:insertTodoHeadline
+    command:
+      name: "Org: Insert TODO Headline"
+      requireEditor: page
+
+  insertCheckboxItem:
+    path: slash.ts:insertCheckboxItem
+    command:
+      name: "Org: Insert Checkbox Item"
+      requireEditor: page
+
+  insertPropertyDrawer:
+    path: slash.ts:insertPropertyDrawer
+    command:
+      name: "Org: Insert Property Drawer"
+      requireEditor: page
+
+  # Virtual Tag Pages (🏷 tagname)
+  readFileOrgTag:
+    path: tag_page.ts:readFileOrgTag
+    pageNamespace:
+      pattern: "^🏷 .+"
+      operation: readFile
+
+  writeFileOrgTag:
+    path: tag_page.ts:writeFileOrgTag
+    pageNamespace:
+      pattern: "^🏷 .+"
+      operation: writeFile
+
+  getFileMetaOrgTag:
+    path: tag_page.ts:getFileMetaOrgTag
+    pageNamespace:
+      pattern: "^🏷 .+"
+      operation: getFileMeta
+
+  # Click handler for tags
+  handleOrgClick:
+    path: click.ts:handleOrgClick
+    events:
+      - page:click
