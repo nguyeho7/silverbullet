@@ -95,7 +95,7 @@ export function createEditorState(
       ],
 
       // Org-mode support
-      orgModePlugin(),
+      orgModePlugin(client),
       autocompletion({
         override: [
           client.editorComplete.bind(client),

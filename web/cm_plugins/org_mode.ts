@@ -30,6 +30,8 @@ import {
 } from "$common/org_parser/engine.ts";
 import { parseInlineCached, type InlineElement } from "$common/org_parser/inline.ts";
 import { foldService, codeFolding } from "@codemirror/language";
+import type { Client } from "../client.ts";
+import { orgPropertyDrawerPlugin, orgPropertyDrawerTheme } from "./org_property_widget.ts";
 
 // Facet to provide the OrgEngine to other extensions
 export const orgEngineFacet = Facet.define<OrgEngine, OrgEngine>({
@@ -535,8 +537,8 @@ export const orgModeTheme = EditorView.baseTheme({
 });
 
 // Main extension bundle
-export function orgModePlugin(): Extension {
-  return [
+export function orgModePlugin(client?: Client): Extension {
+  const extensions: Extension[] = [
     orgEngineField,
     orgDecorationField,
     orgFoldService,
@@ -545,6 +547,14 @@ export function orgModePlugin(): Extension {
     }),
     orgModeTheme,
   ];
+
+  // Add property drawer widget if client is available
+  if (client) {
+    extensions.push(orgPropertyDrawerPlugin(client));
+    extensions.push(orgPropertyDrawerTheme);
+  }
+
+  return extensions;
 }
 
 // Export for testing
