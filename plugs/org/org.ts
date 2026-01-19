@@ -12,6 +12,7 @@ import { editor, space } from "@silverbulletmd/silverbullet/syscalls";
 import {
   buildTree,
   type HeadlineLine,
+  type ListItemLine,
   OrgEngine,
   parseLine,
   parseLines,
@@ -521,5 +522,152 @@ function buildHeadlineLine(
   if (tags && tags.length > 0) {
     line += ` :${tags.join(":")}:`;
   }
+  return line;
+}
+
+/**
+ * Toggle checkbox state on list item: unchecked -> checked -> unchecked
+ * If not on a list item with checkbox, adds a checkbox
+ */
+export async function toggleCheckbox() {
+  const { lineText, lineStart, lineEnd, lineNumber } = await getCurrentLineInfo();
+  const parsed = parseLine(lineText, lineNumber);
+
+  if (parsed.type !== "list-item") {
+    await editor.flashNotification("Not on a list item", "error");
+    return;
+  }
+
+  const listItem = parsed as ListItemLine;
+  let newLine: string;
+
+  if (listItem.checkbox === undefined) {
+    // Add checkbox (unchecked)
+    newLine = buildListItemLine(listItem.indent, listItem.marker, listItem.markerValue, "unchecked", listItem.content);
+  } else if (listItem.checkbox === "unchecked") {
+    // Toggle to checked
+    newLine = buildListItemLine(listItem.indent, listItem.marker, listItem.markerValue, "checked", listItem.content);
+  } else if (listItem.checkbox === "checked") {
+    // Toggle to unchecked
+    newLine = buildListItemLine(listItem.indent, listItem.marker, listItem.markerValue, "unchecked", listItem.content);
+  } else if (listItem.checkbox === "partial") {
+    // Toggle partial to checked
+    newLine = buildListItemLine(listItem.indent, listItem.marker, listItem.markerValue, "checked", listItem.content);
+  } else {
+    return;
+  }
+
+  const text = await editor.getText();
+  const newText = text.substring(0, lineStart) + newLine + text.substring(lineEnd);
+  await editor.setText(newText);
+}
+
+/**
+ * Insert a new list item at current level
+ */
+export async function insertListItem() {
+  const { lineText, lineEnd, lineNumber } = await getCurrentLineInfo();
+  const parsed = parseLine(lineText, lineNumber);
+
+  let indent = 0;
+  let marker: "-" | "+" | "*" | "number" = "-";
+  let markerValue: string | undefined;
+  let hasCheckbox = false;
+
+  if (parsed.type === "list-item") {
+    const listItem = parsed as ListItemLine;
+    indent = listItem.indent;
+    marker = listItem.marker;
+    markerValue = listItem.markerValue;
+    hasCheckbox = listItem.checkbox !== undefined;
+
+    // Increment number for numbered lists
+    if (marker === "number" && markerValue) {
+      const num = parseInt(markerValue);
+      if (!isNaN(num)) {
+        const suffix = markerValue.endsWith(")") ? ")" : ".";
+        markerValue = `${num + 1}${suffix}`;
+      }
+    }
+  }
+
+  const newListItem = "\n" + buildListItemLine(indent, marker, markerValue, hasCheckbox ? "unchecked" : undefined, "");
+
+  const text = await editor.getText();
+  const newText = text.substring(0, lineEnd) + newListItem + text.substring(lineEnd);
+  await editor.setText(newText);
+
+  // Move cursor to end of new list item
+  await editor.setSelection(lineEnd + newListItem.length, lineEnd + newListItem.length);
+}
+
+/**
+ * Indent list item (increase indent)
+ */
+export async function indentListItem() {
+  const { lineText, lineStart, lineEnd, lineNumber } = await getCurrentLineInfo();
+  const parsed = parseLine(lineText, lineNumber);
+
+  if (parsed.type !== "list-item") {
+    await editor.flashNotification("Not on a list item", "error");
+    return;
+  }
+
+  const listItem = parsed as ListItemLine;
+  const newLine = buildListItemLine(listItem.indent + 2, listItem.marker, listItem.markerValue, listItem.checkbox, listItem.content);
+
+  const text = await editor.getText();
+  const newText = text.substring(0, lineStart) + newLine + text.substring(lineEnd);
+  await editor.setText(newText);
+}
+
+/**
+ * Outdent list item (decrease indent)
+ */
+export async function outdentListItem() {
+  const { lineText, lineStart, lineEnd, lineNumber } = await getCurrentLineInfo();
+  const parsed = parseLine(lineText, lineNumber);
+
+  if (parsed.type !== "list-item") {
+    await editor.flashNotification("Not on a list item", "error");
+    return;
+  }
+
+  const listItem = parsed as ListItemLine;
+  if (listItem.indent < 2) {
+    await editor.flashNotification("Cannot outdent further", "error");
+    return;
+  }
+
+  const newLine = buildListItemLine(listItem.indent - 2, listItem.marker, listItem.markerValue, listItem.checkbox, listItem.content);
+
+  const text = await editor.getText();
+  const newText = text.substring(0, lineStart) + newLine + text.substring(lineEnd);
+  await editor.setText(newText);
+}
+
+// Helper to build a list item line
+function buildListItemLine(
+  indent: number,
+  marker: "-" | "+" | "*" | "number",
+  markerValue: string | undefined,
+  checkbox: "checked" | "unchecked" | "partial" | undefined,
+  content: string
+): string {
+  let line = " ".repeat(indent);
+  line += marker === "number" ? (markerValue || "1.") : marker;
+  line += " ";
+
+  if (checkbox !== undefined) {
+    if (checkbox === "checked") {
+      line += "[X] ";
+    } else if (checkbox === "unchecked") {
+      line += "[ ] ";
+    } else if (checkbox === "partial") {
+      line += "[-] ";
+    }
+  }
+
+  line += content;
   return line;
 }

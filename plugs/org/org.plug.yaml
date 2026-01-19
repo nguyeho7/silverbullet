@@ -111,3 +111,59 @@ functions:
       key: "Ctrl-Shift-i"
       mac: "Cmd-Shift-i"
       requireEditor: page
+
+  # List/Checkbox Commands
+  toggleCheckbox:
+    path: org.ts:toggleCheckbox
+    command:
+      name: "Org: Toggle Checkbox"
+      key: "Ctrl-Shift-x"
+      mac: "Cmd-Shift-x"
+      requireEditor: page
+
+  insertListItem:
+    path: org.ts:insertListItem
+    command:
+      name: "Org: Insert List Item"
+      key: "Alt-Enter"
+      mac: "Alt-Enter"
+      requireEditor: page
+
+  indentListItem:
+    path: org.ts:indentListItem
+    command:
+      name: "Org: Indent List Item"
+      key: "Alt-Shift-Right"
+      mac: "Alt-Shift-Right"
+      requireEditor: page
+
+  outdentListItem:
+    path: org.ts:outdentListItem
+    command:
+      name: "Org: Outdent List Item"
+      key: "Alt-Shift-Left"
+      mac: "Alt-Shift-Left"
+      requireEditor: page
+
+  # Agenda Commands
+  showAgenda:
+    path: agenda.ts:showAgenda
+    command:
+      name: "Org: Show Agenda"
+      key: "Ctrl-c a"
+      mac: "Ctrl-c a"
+      requireEditor: page
+
+  showTodoList:
+    path: agenda.ts:showTodoList
+    command:
+      name: "Org: Show TODO List"
+      key: "Ctrl-c t"
+      mac: "Ctrl-c t"
+      requireEditor: page
+
+  # Agenda Widget
+  agendaWidget:
+    path: agenda.ts:agendaWidget
+    codeWidget: org-agenda
+    renderMode: markdown

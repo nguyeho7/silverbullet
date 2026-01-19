@@ -105,7 +105,17 @@ export async function indexOrgHeadlines({ name: pageName, tree }: IndexTreeEvent
         childCount: node.children.length,
       };
 
-      // Merge property drawer values
+      // Merge planning info (SCHEDULED, DEADLINE, CLOSED)
+      if (node.planning) {
+        if (node.planning.scheduled) {
+          headline.scheduled = node.planning.scheduled;
+        }
+        if (node.planning.deadline) {
+          headline.deadline = node.planning.deadline;
+        }
+      }
+
+      // Merge property drawer values (may override planning if both exist)
       if (node.propertyDrawer) {
         for (const [key, value] of node.propertyDrawer.properties) {
           const lowerKey = key.toLowerCase();

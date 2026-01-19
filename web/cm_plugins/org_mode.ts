@@ -77,6 +77,8 @@ const lineDecorations = {
   logbook: Decoration.line({ class: "sb-line-org-logbook" }),
   property: Decoration.line({ class: "sb-line-org-property" }),
   text: Decoration.line({ class: "sb-line-org-text" }),
+  listItem: Decoration.line({ class: "sb-line-org-list-item" }),
+  planning: Decoration.line({ class: "sb-line-org-planning" }),
 };
 
 // Mark decorations for inline elements
@@ -91,6 +93,14 @@ const markDecorations = {
   propertyValue: Decoration.mark({ class: "sb-org-property-value" }),
   drawerDelimiter: Decoration.mark({ class: "sb-org-drawer-delimiter" }),
   timestamp: Decoration.mark({ class: "sb-org-timestamp" }),
+  // List items
+  listMarker: Decoration.mark({ class: "sb-org-list-marker" }),
+  checkboxUnchecked: Decoration.mark({ class: "sb-org-checkbox sb-org-checkbox-unchecked" }),
+  checkboxChecked: Decoration.mark({ class: "sb-org-checkbox sb-org-checkbox-checked" }),
+  checkboxPartial: Decoration.mark({ class: "sb-org-checkbox sb-org-checkbox-partial" }),
+  // Planning
+  planningKeyword: Decoration.mark({ class: "sb-org-planning-keyword" }),
+  planningTimestamp: Decoration.mark({ class: "sb-org-planning-timestamp" }),
   // Inline markup
   bold: Decoration.mark({ class: "sb-org-bold" }),
   italic: Decoration.mark({ class: "sb-org-italic" }),
@@ -211,6 +221,56 @@ function computeDecorations(state: EditorState): DecorationSet {
         // Parse inline markup for text lines
         const textLine = line as import("$common/org_parser/engine.ts").TextLine;
         addInlineDecorations(builder, docLine.text, lineStart);
+        break;
+      }
+
+      case "list-item": {
+        const listLine = line as import("$common/org_parser/engine.ts").ListItemLine;
+        builder.add(lineStart, lineStart, lineDecorations.listItem);
+
+        // Mark the list marker (-, +, *, or number)
+        const markerStart = lineStart + listLine.indent;
+        const markerText = listLine.markerValue || listLine.marker;
+        const markerEnd = markerStart + markerText.length;
+        builder.add(markerStart, markerEnd, markDecorations.listMarker);
+
+        // Mark checkbox if present
+        if (listLine.checkbox) {
+          // Checkbox comes after marker and space: "- [ ] " or "- [X] "
+          const checkboxStart = markerEnd + 1; // space after marker
+          const checkboxEnd = checkboxStart + 3; // "[ ]" or "[X]" or "[-]"
+
+          if (listLine.checkbox === "checked") {
+            builder.add(checkboxStart, checkboxEnd, markDecorations.checkboxChecked);
+          } else if (listLine.checkbox === "unchecked") {
+            builder.add(checkboxStart, checkboxEnd, markDecorations.checkboxUnchecked);
+          } else if (listLine.checkbox === "partial") {
+            builder.add(checkboxStart, checkboxEnd, markDecorations.checkboxPartial);
+          }
+        }
+
+        // Parse inline markup in list item content
+        addInlineDecorations(builder, listLine.content, lineStart + docLine.text.indexOf(listLine.content));
+        break;
+      }
+
+      case "planning": {
+        const planningLine = line as import("$common/org_parser/engine.ts").PlanningLine;
+        builder.add(lineStart, lineStart, lineDecorations.planning);
+
+        // Highlight SCHEDULED, DEADLINE, CLOSED keywords and their timestamps
+        const text = docLine.text;
+        const keywordRegex = /(SCHEDULED|DEADLINE|CLOSED):\s*(<[^>]+>|\[[^\]]+\])/g;
+        let match;
+        while ((match = keywordRegex.exec(text)) !== null) {
+          const keywordStart = lineStart + match.index;
+          const keywordEnd = keywordStart + match[1].length + 1; // include colon
+          builder.add(keywordStart, keywordEnd, markDecorations.planningKeyword);
+
+          const timestampStart = keywordStart + match[0].indexOf(match[2]);
+          const timestampEnd = timestampStart + match[2].length;
+          builder.add(timestampStart, timestampEnd, markDecorations.planningTimestamp);
+        }
         break;
       }
     }
@@ -428,6 +488,47 @@ export const orgModeTheme = EditorView.baseTheme({
   ".sb-org-timestamp-inactive": {
     color: "var(--org-timestamp-inactive-color, #7f8c8d)",
     backgroundColor: "var(--org-timestamp-inactive-bg, rgba(127, 140, 141, 0.1))",
+    padding: "1px 4px",
+    borderRadius: "3px",
+  },
+
+  // List items
+  ".sb-line-org-list-item": {
+    // List items have normal styling, decoration comes from marker/checkbox
+  },
+  ".sb-org-list-marker": {
+    color: "var(--org-list-marker-color, #7f8c8d)",
+    fontWeight: "bold",
+  },
+
+  // Checkboxes
+  ".sb-org-checkbox": {
+    fontFamily: "monospace",
+    fontWeight: "bold",
+  },
+  ".sb-org-checkbox-unchecked": {
+    color: "var(--org-checkbox-unchecked-color, #e74c3c)",
+  },
+  ".sb-org-checkbox-checked": {
+    color: "var(--org-checkbox-checked-color, #27ae60)",
+  },
+  ".sb-org-checkbox-partial": {
+    color: "var(--org-checkbox-partial-color, #f39c12)",
+  },
+
+  // Planning (SCHEDULED, DEADLINE, CLOSED)
+  ".sb-line-org-planning": {
+    fontSize: "0.9em",
+  },
+  ".sb-org-planning-keyword": {
+    fontWeight: "bold",
+  },
+  ".sb-org-planning-keyword:has(+ .sb-org-planning-timestamp)": {
+    // Note: :has selector may not work in all browsers
+  },
+  ".sb-org-planning-timestamp": {
+    color: "var(--org-planning-timestamp-color, #8e44ad)",
+    backgroundColor: "var(--org-planning-timestamp-bg, rgba(142, 68, 173, 0.1))",
     padding: "1px 4px",
     borderRadius: "3px",
   },

@@ -16,6 +16,8 @@ export type LineType =
   | "logbook-start"
   | "logbook-end"
   | "logbook-entry"
+  | "list-item"
+  | "planning"
   | "text"
   | "blank";
 
@@ -51,6 +53,27 @@ export interface TextLine extends ParsedLine {
   text: string;
 }
 
+// List item types
+export type ListMarker = "-" | "+" | "*" | "number";
+export type CheckboxState = "checked" | "unchecked" | "partial" | undefined;
+
+export interface ListItemLine extends ParsedLine {
+  type: "list-item";
+  indent: number;
+  marker: ListMarker;
+  markerValue?: string; // For numbered lists: "1.", "2)", etc.
+  checkbox?: CheckboxState;
+  content: string;
+}
+
+// Planning line (SCHEDULED, DEADLINE, CLOSED)
+export interface PlanningLine extends ParsedLine {
+  type: "planning";
+  scheduled?: string;
+  deadline?: string;
+  closed?: string;
+}
+
 export interface BlankLine extends ParsedLine {
   type: "blank";
 }
@@ -67,6 +90,8 @@ export type AnyLine =
   | HeadlineLine
   | PropertyLine
   | LogbookEntryLine
+  | ListItemLine
+  | PlanningLine
   | TextLine
   | BlankLine
   | DrawerStartLine
@@ -85,8 +110,15 @@ export interface Logbook {
   endLine: number;
 }
 
+export interface Planning {
+  scheduled?: string;
+  deadline?: string;
+  closed?: string;
+}
+
 export interface HeadlineNode {
   line: HeadlineLine;
+  planning?: Planning;
   propertyDrawer?: PropertyDrawer;
   logbook?: Logbook;
   content: AnyLine[];
@@ -112,6 +144,14 @@ const LOGBOOK_END = /^:END:\s*$/;
 const CLOCK_PATTERN = /^CLOCK:\s*(.+)$/;
 const STATE_PATTERN = /^-\s+State\s+"([^"]+)"\s+from\s+"([^"]+)"\s+(.+)$/;
 const BLANK_PATTERN = /^\s*$/;
+
+// List item patterns
+// Matches: "  - item", "  + item", "  1. item", "  1) item", with optional checkbox
+const LIST_ITEM_PATTERN = /^(\s*)([-+]|\d+[.)])\s+(?:\[([ X-])\]\s+)?(.*)$/;
+
+// Planning line pattern (SCHEDULED, DEADLINE, CLOSED)
+const PLANNING_PATTERN = /^(SCHEDULED|DEADLINE|CLOSED):\s*(<[^>]+>|\[[^\]]+\])/g;
+const PLANNING_LINE_PATTERN = /^\s*((?:SCHEDULED|DEADLINE|CLOSED):\s*(?:<[^>]+>|\[[^\]]+\])\s*)+$/;
 
 /**
  * Parse a single line and determine its type
@@ -180,6 +220,78 @@ export function parseLine(text: string, lineNumber: number): AnyLine {
       lineNumber,
       entryType: "state",
       content: text.trim(),
+    };
+  }
+
+  // Check for planning line (SCHEDULED, DEADLINE, CLOSED)
+  if (PLANNING_LINE_PATTERN.test(text.trim())) {
+    const planningLine: PlanningLine = {
+      type: "planning",
+      raw: text,
+      lineNumber,
+    };
+
+    // Extract each planning keyword
+    const planningText = text.trim();
+    let match;
+    const regex = /(?:SCHEDULED|DEADLINE|CLOSED):\s*(<[^>]+>|\[[^\]]+\])/g;
+    while ((match = regex.exec(planningText)) !== null) {
+      const fullMatch = match[0];
+      const timestamp = match[1];
+      if (fullMatch.startsWith("SCHEDULED")) {
+        planningLine.scheduled = timestamp;
+      } else if (fullMatch.startsWith("DEADLINE")) {
+        planningLine.deadline = timestamp;
+      } else if (fullMatch.startsWith("CLOSED")) {
+        planningLine.closed = timestamp;
+      }
+    }
+
+    return planningLine;
+  }
+
+  // Check for list item
+  const listMatch = text.match(LIST_ITEM_PATTERN);
+  if (listMatch) {
+    const indent = listMatch[1].length;
+    const markerStr = listMatch[2];
+    const checkboxChar = listMatch[3];
+    const content = listMatch[4];
+
+    let marker: ListMarker;
+    let markerValue: string | undefined;
+
+    if (markerStr === "-") {
+      marker = "-";
+    } else if (markerStr === "+") {
+      marker = "+";
+    } else if (markerStr === "*") {
+      marker = "*";
+    } else {
+      marker = "number";
+      markerValue = markerStr;
+    }
+
+    let checkbox: CheckboxState;
+    if (checkboxChar !== undefined) {
+      if (checkboxChar === "X") {
+        checkbox = "checked";
+      } else if (checkboxChar === " ") {
+        checkbox = "unchecked";
+      } else if (checkboxChar === "-") {
+        checkbox = "partial";
+      }
+    }
+
+    return {
+      type: "list-item",
+      raw: text,
+      lineNumber,
+      indent,
+      marker,
+      markerValue,
+      checkbox,
+      content,
     };
   }
 
@@ -294,6 +406,21 @@ export function buildTree(lines: AnyLine[]): OrgDocument {
         currentHeadline.propertyDrawer.properties.set(propLine.key, propLine.value);
       } else if (line.type === "logbook-entry" && inLogbook && currentHeadline.logbook) {
         currentHeadline.logbook.entries.push(line as LogbookEntryLine);
+      } else if (line.type === "planning") {
+        // Planning lines (SCHEDULED, DEADLINE, CLOSED) attach to headline
+        const planningLine = line as PlanningLine;
+        if (!currentHeadline.planning) {
+          currentHeadline.planning = {};
+        }
+        if (planningLine.scheduled) {
+          currentHeadline.planning.scheduled = planningLine.scheduled;
+        }
+        if (planningLine.deadline) {
+          currentHeadline.planning.deadline = planningLine.deadline;
+        }
+        if (planningLine.closed) {
+          currentHeadline.planning.closed = planningLine.closed;
+        }
       } else {
         currentHeadline.content.push(line);
       }
